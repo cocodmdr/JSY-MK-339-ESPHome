@@ -1,0 +1,28 @@
+<<: !include your-esp-common-file.yaml
+
+# Configure UART + Modbus for RS-485 (example: ESP8266 + MAX485).
+uart:
+  - id: mod_bus
+    tx_pin: GPIO14
+    rx_pin: GPIO12
+    baud_rate: 9600
+
+modbus:
+  - id: modbus1
+    uart_id: mod_bus
+
+# Include one or multiple JSY-MK-339 meters from this repository.
+packages:
+  meter1: !include
+    file: jsy-mk-339.yaml
+    vars:
+      meter_name: "Grid"
+      meter_id: jsy339_grid
+      meter_address: "1"
+
+  meter2: !include
+    file: jsy-mk-339.yaml
+    vars:
+      meter_name: "Load"
+      meter_id: jsy339_load
+      meter_address: "2"
