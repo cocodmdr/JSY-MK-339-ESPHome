@@ -2,13 +2,13 @@
 # Core V1.1 profile: diagnostics + main electrical measurements
 
 substitutions:
-  skip_updates_20s: "3"
-  skip_updates_60s: "11"
-  metadata_internal: "false"
-  diagnostics_internal: "false"
-  alarms_internal: "false"
-  config_internal: "false"
-  limits_internal: "false"
+  jsy_skip_updates_normal: "3"
+  jsy_skip_updates_slow: "11"
+  jsy_hide_metadata: "false"
+  jsy_hide_diagnostics: "false"
+  jsy_hide_alarms: "false"
+  jsy_hide_config: "false"
+  jsy_hide_limits: "false"
 
 modbus_controller:
   - id: ${meter_id}_main
@@ -30,7 +30,7 @@ sensor:
     force_new_range: true
     value_type: U_WORD
     internal: true
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:chip
 
@@ -42,7 +42,7 @@ sensor:
     address: 0x0001
     value_type: U_WORD
     internal: true
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:information-outline
 
@@ -54,7 +54,7 @@ sensor:
     address: 0x0002
     value_type: U_WORD
     internal: true
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:information-outline
 
@@ -66,7 +66,7 @@ sensor:
     address: 0x0003
     value_type: U_WORD
     internal: true
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:information-outline
 
@@ -78,7 +78,7 @@ sensor:
     address: 0x0004
     value_type: U_WORD
     internal: true
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:serial-port
 
@@ -92,8 +92,8 @@ sensor:
     value_type: U_WORD
     unit_of_measurement: V
     accuracy_decimals: 0
-    internal: ${limits_internal}
-    skip_updates: ${skip_updates_60s}
+    internal: ${jsy_hide_limits}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:sine-wave
 
@@ -106,8 +106,8 @@ sensor:
     value_type: U_WORD
     unit_of_measurement: A
     accuracy_decimals: 1
-    internal: ${limits_internal}
-    skip_updates: ${skip_updates_60s}
+    internal: ${jsy_hide_limits}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:current-ac
     filters:
@@ -122,8 +122,8 @@ sensor:
     value_type: U_WORD
     unit_of_measurement: A
     accuracy_decimals: 3
-    internal: ${limits_internal}
-    skip_updates: ${skip_updates_60s}
+    internal: ${jsy_hide_limits}
+    skip_updates: ${jsy_skip_updates_slow}
     entity_category: diagnostic
     icon: mdi:current-ac
     filters:
@@ -131,7 +131,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
-    name: "${meter_name} Config Wiring Mode Raw"
+    name: "${meter_name} Wiring Mode Raw"
     id: ${meter_id}_wiring_mode_raw
     register_type: holding
     address: 0x0025
@@ -139,7 +139,7 @@ sensor:
     internal: true
     entity_category: diagnostic
     icon: mdi:transmission-tower
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: template
     name: "${meter_name} Comm RS485 Baud bps"
@@ -157,7 +157,7 @@ sensor:
       }
     accuracy_decimals: 0
     unit_of_measurement: bps
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
 
@@ -173,7 +173,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
     icon: mdi:sine-wave
@@ -189,7 +189,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -204,7 +204,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -219,7 +219,7 @@ sensor:
     unit_of_measurement: A
     accuracy_decimals: 2
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -234,7 +234,7 @@ sensor:
     unit_of_measurement: A
     accuracy_decimals: 2
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -249,7 +249,7 @@ sensor:
     unit_of_measurement: A
     accuracy_decimals: 2
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -406,7 +406,7 @@ sensor:
     unit_of_measurement: Hz
     accuracy_decimals: 2
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -420,7 +420,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 3
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.001
 
@@ -434,7 +434,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 3
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.001
 
@@ -448,7 +448,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 3
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.001
 
@@ -462,7 +462,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 3
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.001
 
@@ -478,7 +478,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -493,7 +493,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -508,7 +508,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -523,7 +523,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -537,7 +537,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -551,7 +551,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -565,7 +565,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -579,7 +579,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -593,7 +593,7 @@ sensor:
     unit_of_measurement: kVAh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -607,7 +607,7 @@ sensor:
     unit_of_measurement: kVAh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -621,7 +621,7 @@ sensor:
     unit_of_measurement: kVAh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -635,7 +635,7 @@ sensor:
     unit_of_measurement: kVAh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -649,7 +649,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -663,7 +663,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -677,7 +677,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -691,7 +691,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -705,7 +705,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -719,7 +719,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -733,7 +733,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -747,7 +747,7 @@ sensor:
     unit_of_measurement: kWh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -761,7 +761,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -775,7 +775,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -789,7 +789,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -803,7 +803,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -817,7 +817,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -831,7 +831,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -845,7 +845,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -859,7 +859,7 @@ sensor:
     unit_of_measurement: kvarh
     accuracy_decimals: 2
     value_type: U_DWORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.01
 
@@ -872,7 +872,7 @@ sensor:
     value_type: U_WORD
     internal: true
     entity_category: diagnostic
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -883,7 +883,7 @@ sensor:
     value_type: U_WORD
     internal: true
     entity_category: diagnostic
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -897,7 +897,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -912,7 +912,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -927,7 +927,7 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 1
     value_type: U_WORD
-    skip_updates: ${skip_updates_20s}
+    skip_updates: ${jsy_skip_updates_normal}
     filters:
       - multiply: 0.01
 
@@ -943,7 +943,7 @@ sensor:
     unit_of_measurement: A
     accuracy_decimals: 3
     value_type: U_WORD
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
     filters:
       - multiply: 0.001
 
@@ -952,7 +952,7 @@ select:
     name: "${meter_name} Limit Voltage Setpoint"
     id: ${meter_id}_voltage_limit_set
     optimistic: true
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:sine-wave
     options:
@@ -968,7 +968,7 @@ select:
     name: "${meter_name} Limit Current Setpoint"
     id: ${meter_id}_current_limit_set
     optimistic: true
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:current-ac
     options:
@@ -982,7 +982,7 @@ select:
     name: "${meter_name} Limit Leakage Current Setpoint"
     id: ${meter_id}_leakage_limit_set
     optimistic: true
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:current-ac
     options:
@@ -994,10 +994,10 @@ select:
       - 1.000A
 
   - platform: template
-    name: "${meter_name} Config Wiring Mode Setpoint"
+    name: "${meter_name} Wiring Mode Setpoint"
     id: ${meter_id}_wiring_mode_set
     optimistic: true
-    internal: ${config_internal}
+    internal: ${jsy_hide_config}
     entity_category: config
     icon: mdi:transmission-tower
     options:
@@ -1006,8 +1006,8 @@ select:
 
 button:
   - platform: template
-    name: "${meter_name} Apply Limit Voltage"
-    internal: ${limits_internal}
+    name: "${meter_name} Limit Voltage Apply"
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:content-save
     on_press:
@@ -1076,8 +1076,8 @@ button:
                 data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x01, 0x0E, 0x21, 0x64]
 
   - platform: template
-    name: "${meter_name} Apply Limit Current"
-    internal: ${limits_internal}
+    name: "${meter_name} Limit Current Apply"
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:content-save
     on_press:
@@ -1128,8 +1128,8 @@ button:
                 data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x13, 0x88, 0xB7, 0xAD]
 
   - platform: template
-    name: "${meter_name} Apply Limit Leakage Current"
-    internal: ${limits_internal}
+    name: "${meter_name} Limit Leakage Current Apply"
+    internal: ${jsy_hide_limits}
     entity_category: config
     icon: mdi:content-save
     on_press:
@@ -1189,8 +1189,8 @@ button:
                 data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x03, 0xE8, 0xA1, 0xE8]
 
   - platform: template
-    name: "${meter_name} Config Apply Wiring Mode"
-    internal: ${config_internal}
+    name: "${meter_name} Wiring Mode Apply"
+    internal: ${jsy_hide_config}
     entity_category: config
     icon: mdi:content-save
     on_press:
@@ -1224,7 +1224,7 @@ text_sensor:
       snprintf(out, sizeof(out), "unknown (0x%04X)", raw);
       return std::string(out);
     icon: mdi:chip
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1240,7 +1240,7 @@ text_sensor:
       snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
       return std::string(out);
     icon: mdi:information-outline
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1256,7 +1256,7 @@ text_sensor:
       snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
       return std::string(out);
     icon: mdi:information-outline
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1272,7 +1272,7 @@ text_sensor:
       snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
       return std::string(out);
     icon: mdi:information-outline
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1285,7 +1285,7 @@ text_sensor:
       snprintf(out, sizeof(out), "%u", address);
       return std::string(out);
     icon: mdi:numeric
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1302,7 +1302,7 @@ text_sensor:
         default: return std::string("unknown");
       }
     icon: mdi:format-list-bulleted
-    internal: ${metadata_internal}
+    internal: ${jsy_hide_metadata}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1314,7 +1314,7 @@ text_sensor:
       if (raw & 0x0008) return std::string("reverse");
       return std::string("forward");
     icon: mdi:arrow-left-right
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     update_interval: 60s
 
@@ -1326,20 +1326,20 @@ text_sensor:
       if (raw & 0x0080) return std::string("reverse");
       return std::string("forward");
     icon: mdi:arrow-left-right
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     update_interval: 60s
 
   - platform: template
-    name: "${meter_name} Config Wiring Mode"
+    name: "${meter_name} Wiring Mode"
     lambda: |-
       if (isnan(id(${meter_id}_wiring_mode_raw).state)) return std::string("unknown");
       const uint16_t mode = (uint16_t) id(${meter_id}_wiring_mode_raw).state;
       if (mode == 0x0001) return std::string("3-phase 3-wire");
       return std::string("3-phase 4-wire");
     icon: mdi:transmission-tower
-    internal: ${config_internal}
-    entity_category: config
+    internal: ${jsy_hide_config}
+    entity_category: diagnostic
     update_interval: 60s
 
 binary_sensor:
@@ -1350,10 +1350,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0100
     device_class: problem
-    internal: ${alarms_internal}
+    internal: ${jsy_hide_alarms}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1362,10 +1362,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0080
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1374,10 +1374,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0010
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1386,10 +1386,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0020
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1398,10 +1398,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0040
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1410,10 +1410,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0001
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1422,10 +1422,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0002
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1434,10 +1434,10 @@ binary_sensor:
     address: 0x0133
     bitmask: 0x0004
     device_class: problem
-    internal: ${limits_internal}
+    internal: ${jsy_hide_limits}
     entity_category: diagnostic
     icon: mdi:alert
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1445,10 +1445,10 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0001
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1456,10 +1456,10 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0002
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1467,10 +1467,10 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0004
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1478,10 +1478,10 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0010
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1489,10 +1489,10 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0020
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
 
   - platform: modbus_controller
     modbus_controller_id: ${meter_id}_main
@@ -1500,7 +1500,7 @@ binary_sensor:
     register_type: holding
     address: 0x0132
     bitmask: 0x0040
-    internal: ${diagnostics_internal}
+    internal: ${jsy_hide_diagnostics}
     entity_category: diagnostic
     icon: mdi:swap-horizontal
-    skip_updates: ${skip_updates_60s}
+    skip_updates: ${jsy_skip_updates_slow}
