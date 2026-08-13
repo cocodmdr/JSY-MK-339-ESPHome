@@ -2,6 +2,8 @@
 
 This repository provides an ESPHome configuration package for the JSY-MK-339 three-phase DIN-rail Modbus energy meter.
 
+![JSY-MK-339 Energy Meter](docs/jsy-mk-339.jpg)
+
 ## Features
 
 - Real-time monitoring of voltage, current, power, frequency, and energy counters.
@@ -15,6 +17,8 @@ This repository provides an ESPHome configuration package for the JSY-MK-339 thr
 ## Manufacturer Documentation
 
 Technical details and register mapping come from the JSY-MK-339 user manual.
+
+[JSY-MK-339 User Manual (PDF)](docs/jsy-mk-339-user-manual.pdf)
 
 ## ESPHome Integration
 
