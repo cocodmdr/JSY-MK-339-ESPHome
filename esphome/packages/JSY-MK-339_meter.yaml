@@ -1,0 +1,1517 @@
+# Package for JSY-MK-339 Energy Meter
+# Core V1.1 profile: diagnostics + main electrical measurements
+
+substitutions:
+  skip_updates_20s: "3"
+  skip_updates_60s: "11"
+  metadata_internal: "false"
+  diagnostics_internal: "false"
+  alarms_internal: "false"
+  config_internal: "false"
+  limits_internal: "false"
+
+modbus_controller:
+  - id: ${meter_id}_main
+    address: ${meter_address}
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 5s
+    command_throttle: 100ms
+    max_cmd_retries: 2
+    offline_skip_updates: 3
+
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Model Raw"
+    id: ${meter_id}_model_raw
+    register_type: holding
+    address: 0x0000
+    force_new_range: true
+    value_type: U_WORD
+    internal: true
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:chip
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Hardware Version Raw"
+    id: ${meter_id}_hw_ver_raw
+    register_type: holding
+    address: 0x0001
+    value_type: U_WORD
+    internal: true
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:information-outline
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Software Version Raw"
+    id: ${meter_id}_sw_ver_raw
+    register_type: holding
+    address: 0x0002
+    value_type: U_WORD
+    internal: true
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:information-outline
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Protocol Version Raw"
+    id: ${meter_id}_proto_ver_raw
+    register_type: holding
+    address: 0x0003
+    value_type: U_WORD
+    internal: true
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:information-outline
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Comm RS485 Config Raw"
+    id: ${meter_id}_rs485_cfg_raw
+    register_type: holding
+    address: 0x0004
+    value_type: U_WORD
+    internal: true
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:serial-port
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Limit Voltage"
+    id: ${meter_id}_voltage_limit
+    register_type: holding
+    address: 0x0020
+    force_new_range: true
+    value_type: U_WORD
+    unit_of_measurement: V
+    accuracy_decimals: 0
+    internal: ${limits_internal}
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:sine-wave
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Limit Current"
+    id: ${meter_id}_current_limit
+    register_type: holding
+    address: 0x0021
+    value_type: U_WORD
+    unit_of_measurement: A
+    accuracy_decimals: 1
+    internal: ${limits_internal}
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:current-ac
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Limit Leakage Current"
+    id: ${meter_id}_leakage_limit
+    register_type: holding
+    address: 0x0026
+    value_type: U_WORD
+    unit_of_measurement: A
+    accuracy_decimals: 3
+    internal: ${limits_internal}
+    skip_updates: ${skip_updates_60s}
+    entity_category: diagnostic
+    icon: mdi:current-ac
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Config Wiring Mode Raw"
+    id: ${meter_id}_wiring_mode_raw
+    register_type: holding
+    address: 0x0025
+    value_type: U_WORD
+    internal: true
+    entity_category: diagnostic
+    icon: mdi:transmission-tower
+    skip_updates: ${skip_updates_60s}
+
+  - platform: template
+    name: "${meter_name} Comm RS485 Address"
+    lambda: return (int32_t) ((((uint16_t) id(${meter_id}_rs485_cfg_raw).state) >> 8) & 0xFF);
+    accuracy_decimals: 0
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    icon: mdi:numeric
+
+  - platform: template
+    name: "${meter_name} Comm RS485 Baud Code"
+    lambda: return ((uint16_t) id(${meter_id}_rs485_cfg_raw).state) & 0x0F;
+    accuracy_decimals: 0
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    icon: mdi:speedometer
+
+  - platform: template
+    name: "${meter_name} Comm RS485 Data Format Code"
+    lambda: return ((((uint16_t) id(${meter_id}_rs485_cfg_raw).state) & 0x00FF) >> 4) & 0x03;
+    accuracy_decimals: 0
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    icon: mdi:format-list-bulleted
+
+  - platform: template
+    name: "${meter_name} Comm RS485 Baud bps"
+    lambda: |-
+      const uint8_t code = ((uint16_t) id(${meter_id}_rs485_cfg_raw).state) & 0x0F;
+      switch (code) {
+        case 2: return 600;
+        case 3: return 1200;
+        case 4: return 2400;
+        case 5: return 4800;
+        case 6: return 9600;
+        case 7: return 19200;
+        case 8: return 38400;
+        default: return 0;
+      }
+    accuracy_decimals: 0
+    unit_of_measurement: bps
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Voltage Phase A"
+    id: ${meter_id}_Va
+    register_type: holding
+    address: 0x0100
+    force_new_range: true
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+    icon: mdi:sine-wave
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Voltage Phase B"
+    id: ${meter_id}_Vb
+    register_type: holding
+    address: 0x0101
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Voltage Phase C"
+    id: ${meter_id}_Vc
+    register_type: holding
+    address: 0x0102
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Current Phase A"
+    id: ${meter_id}_Ia
+    register_type: holding
+    address: 0x0103
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: A
+    accuracy_decimals: 2
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Current Phase B"
+    id: ${meter_id}_Ib
+    register_type: holding
+    address: 0x0104
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: A
+    accuracy_decimals: 2
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Current Phase C"
+    id: ${meter_id}_Ic
+    register_type: holding
+    address: 0x0105
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: A
+    accuracy_decimals: 2
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Power Phase A"
+    id: ${meter_id}_Pa
+    register_type: holding
+    address: 0x0106
+    force_new_range: true
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Power Phase B"
+    id: ${meter_id}_Pb
+    register_type: holding
+    address: 0x0107
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Power Phase C"
+    id: ${meter_id}_Pc
+    register_type: holding
+    address: 0x0108
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Power Total"
+    id: ${meter_id}_P_total
+    register_type: holding
+    address: 0x0109
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    value_type: U_DWORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Power Phase A"
+    id: ${meter_id}_Qa
+    register_type: holding
+    address: 0x010B
+    device_class: reactive_power
+    state_class: measurement
+    unit_of_measurement: var
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Power Phase B"
+    id: ${meter_id}_Qb
+    register_type: holding
+    address: 0x010C
+    device_class: reactive_power
+    state_class: measurement
+    unit_of_measurement: var
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Power Phase C"
+    id: ${meter_id}_Qc
+    register_type: holding
+    address: 0x010D
+    device_class: reactive_power
+    state_class: measurement
+    unit_of_measurement: var
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Power Total"
+    id: ${meter_id}_Q_total
+    register_type: holding
+    address: 0x010E
+    device_class: reactive_power
+    state_class: measurement
+    unit_of_measurement: var
+    accuracy_decimals: 0
+    value_type: U_DWORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Power Phase A"
+    id: ${meter_id}_Sa
+    register_type: holding
+    address: 0x0110
+    unit_of_measurement: VA
+    state_class: measurement
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Power Phase B"
+    id: ${meter_id}_Sb
+    register_type: holding
+    address: 0x0111
+    unit_of_measurement: VA
+    state_class: measurement
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Power Phase C"
+    id: ${meter_id}_Sc
+    register_type: holding
+    address: 0x0112
+    unit_of_measurement: VA
+    state_class: measurement
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Power Total"
+    id: ${meter_id}_S_total
+    register_type: holding
+    address: 0x0113
+    unit_of_measurement: VA
+    state_class: measurement
+    accuracy_decimals: 0
+    value_type: U_DWORD
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Frequency"
+    id: ${meter_id}_freq
+    register_type: holding
+    address: 0x0115
+    force_new_range: true
+    device_class: frequency
+    state_class: measurement
+    unit_of_measurement: Hz
+    accuracy_decimals: 2
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Power Factor Phase A"
+    id: ${meter_id}_pfa
+    register_type: holding
+    address: 0x0116
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 3
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Power Factor Phase B"
+    id: ${meter_id}_pfb
+    register_type: holding
+    address: 0x0117
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 3
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Power Factor Phase C"
+    id: ${meter_id}_pfc
+    register_type: holding
+    address: 0x0118
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 3
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Power Factor Total"
+    id: ${meter_id}_pf_total
+    register_type: holding
+    address: 0x0119
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 3
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Energy Phase A"
+    id: ${meter_id}_Ea
+    register_type: holding
+    address: 0x011A
+    force_new_range: true
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Energy Phase B"
+    id: ${meter_id}_Eb
+    register_type: holding
+    address: 0x011C
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Energy Phase C"
+    id: ${meter_id}_Ec
+    register_type: holding
+    address: 0x011E
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Active Energy Total"
+    id: ${meter_id}_E_total
+    register_type: holding
+    address: 0x0120
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Energy Phase A"
+    id: ${meter_id}_Qe_a
+    register_type: holding
+    address: 0x0122
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Energy Phase B"
+    id: ${meter_id}_Qe_b
+    register_type: holding
+    address: 0x0124
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Energy Phase C"
+    id: ${meter_id}_Qe_c
+    register_type: holding
+    address: 0x0126
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reactive Energy Total"
+    id: ${meter_id}_Qe_total
+    register_type: holding
+    address: 0x0128
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Energy Phase A"
+    id: ${meter_id}_Se_a
+    register_type: holding
+    address: 0x012A
+    state_class: total_increasing
+    unit_of_measurement: kVAh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Energy Phase B"
+    id: ${meter_id}_Se_b
+    register_type: holding
+    address: 0x012C
+    state_class: total_increasing
+    unit_of_measurement: kVAh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Energy Phase C"
+    id: ${meter_id}_Se_c
+    register_type: holding
+    address: 0x012E
+    state_class: total_increasing
+    unit_of_measurement: kVAh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Apparent Energy Total"
+    id: ${meter_id}_Se_total
+    register_type: holding
+    address: 0x0130
+    state_class: total_increasing
+    unit_of_measurement: kVAh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Active Energy Phase A"
+    id: ${meter_id}_Eaf_a
+    register_type: holding
+    address: 0x0134
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Active Energy Phase B"
+    id: ${meter_id}_Eaf_b
+    register_type: holding
+    address: 0x0136
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Active Energy Phase C"
+    id: ${meter_id}_Eaf_c
+    register_type: holding
+    address: 0x0138
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Active Energy Total"
+    id: ${meter_id}_Eaf_total
+    register_type: holding
+    address: 0x013A
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Active Energy Phase A"
+    id: ${meter_id}_Ear_a
+    register_type: holding
+    address: 0x013C
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Active Energy Phase B"
+    id: ${meter_id}_Ear_b
+    register_type: holding
+    address: 0x013E
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Active Energy Phase C"
+    id: ${meter_id}_Ear_c
+    register_type: holding
+    address: 0x0140
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Active Energy Total"
+    id: ${meter_id}_Ear_total
+    register_type: holding
+    address: 0x0142
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Reactive Energy Phase A"
+    id: ${meter_id}_Qef_a
+    register_type: holding
+    address: 0x0144
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Reactive Energy Phase B"
+    id: ${meter_id}_Qef_b
+    register_type: holding
+    address: 0x0146
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Reactive Energy Phase C"
+    id: ${meter_id}_Qef_c
+    register_type: holding
+    address: 0x0148
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Forward Reactive Energy Total"
+    id: ${meter_id}_Qef_total
+    register_type: holding
+    address: 0x014A
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Reactive Energy Phase A"
+    id: ${meter_id}_Qer_a
+    register_type: holding
+    address: 0x014C
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Reactive Energy Phase B"
+    id: ${meter_id}_Qer_b
+    register_type: holding
+    address: 0x014E
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Reactive Energy Phase C"
+    id: ${meter_id}_Qer_c
+    register_type: holding
+    address: 0x0150
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Reverse Reactive Energy Total"
+    id: ${meter_id}_Qer_total
+    register_type: holding
+    address: 0x0152
+    state_class: total_increasing
+    unit_of_measurement: kvarh
+    accuracy_decimals: 2
+    value_type: U_DWORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Power Direction Raw"
+    id: ${meter_id}_power_direction_raw
+    register_type: holding
+    address: 0x0132
+    value_type: U_WORD
+    internal: true
+    entity_category: diagnostic
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Status Raw"
+    id: ${meter_id}_alarm_status_raw
+    register_type: holding
+    address: 0x0133
+    value_type: U_WORD
+    internal: true
+    entity_category: diagnostic
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Line Voltage Uab"
+    id: ${meter_id}_Uab
+    register_type: holding
+    address: 0x0154
+    force_new_range: true
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Line Voltage Ubc"
+    id: ${meter_id}_Ubc
+    register_type: holding
+    address: 0x0155
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Line Voltage Uca"
+    id: ${meter_id}_Uca
+    register_type: holding
+    address: 0x0156
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    value_type: U_WORD
+    skip_updates: ${skip_updates_20s}
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Leakage Current"
+    id: ${meter_id}_I_leak
+    register_type: holding
+    address: 0x016A
+    force_new_range: true
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: A
+    accuracy_decimals: 3
+    value_type: U_WORD
+    skip_updates: ${skip_updates_60s}
+    filters:
+      - multiply: 0.001
+
+select:
+  - platform: template
+    name: "${meter_name} Limit Voltage Setpoint"
+    id: ${meter_id}_voltage_limit_set
+    optimistic: true
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:sine-wave
+    options:
+      - 240V
+      - 245V
+      - 250V
+      - 253V
+      - 260V
+      - 265V
+      - 270V
+
+  - platform: template
+    name: "${meter_name} Limit Current Setpoint"
+    id: ${meter_id}_current_limit_set
+    optimistic: true
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:current-ac
+    options:
+      - 50A
+      - 80A
+      - 100A
+      - 250A
+      - 500A
+
+  - platform: template
+    name: "${meter_name} Limit Leakage Current Setpoint"
+    id: ${meter_id}_leakage_limit_set
+    optimistic: true
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:current-ac
+    options:
+      - 0.030A
+      - 0.050A
+      - 0.100A
+      - 0.300A
+      - 0.500A
+      - 1.000A
+
+  - platform: template
+    name: "${meter_name} Config Wiring Mode Setpoint"
+    id: ${meter_id}_wiring_mode_set
+    optimistic: true
+    internal: ${config_internal}
+    entity_category: config
+    icon: mdi:transmission-tower
+    options:
+      - 3-phase 3-wire
+      - 3-phase 4-wire
+
+button:
+  - platform: template
+    name: "${meter_name} Apply Limit Voltage"
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:content-save
+    on_press:
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 0;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0xF0, 0xA1, 0x74]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 1;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0xF5, 0x61, 0x77]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 2;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0xFA, 0x21, 0x73]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 3;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0xFD, 0x60, 0xB1]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 4;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x01, 0x04, 0xA1, 0x63]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 5;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x01, 0x09, 0x60, 0xA6]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_voltage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 6;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x20, 0x00, 0x01, 0x02, 0x01, 0x0E, 0x21, 0x64]
+
+  - platform: template
+    name: "${meter_name} Apply Limit Current"
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:content-save
+    on_press:
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_current_limit_set).active_index();
+              return idx.has_value() && idx.value() == 0;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x01, 0xF4, 0xA0, 0xF6]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_current_limit_set).active_index();
+              return idx.has_value() && idx.value() == 1;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x03, 0x20, 0xA1, 0xC9]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_current_limit_set).active_index();
+              return idx.has_value() && idx.value() == 2;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x03, 0xE8, 0xA0, 0x5F]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_current_limit_set).active_index();
+              return idx.has_value() && idx.value() == 3;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x09, 0xC4, 0xA7, 0x22]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_current_limit_set).active_index();
+              return idx.has_value() && idx.value() == 4;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x21, 0x00, 0x01, 0x02, 0x13, 0x88, 0xB7, 0xAD]
+
+  - platform: template
+    name: "${meter_name} Apply Limit Leakage Current"
+    internal: ${limits_internal}
+    entity_category: config
+    icon: mdi:content-save
+    on_press:
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 0;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x00, 0x1E, 0x21, 0x5E]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 1;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x00, 0x32, 0x20, 0x83]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 2;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x00, 0x64, 0xA0, 0xBD]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 3;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x01, 0x2C, 0xA1, 0x1B]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 4;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x01, 0xF4, 0xA1, 0x41]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_leakage_limit_set).active_index();
+              return idx.has_value() && idx.value() == 5;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x26, 0x00, 0x01, 0x02, 0x03, 0xE8, 0xA1, 0xE8]
+
+  - platform: template
+    name: "${meter_name} Config Apply Wiring Mode"
+    internal: ${config_internal}
+    entity_category: config
+    icon: mdi:content-save
+    on_press:
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_wiring_mode_set).active_index();
+              return idx.has_value() && idx.value() == 0;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x25, 0x00, 0x01, 0x02, 0x00, 0x01, 0x60, 0xA5]
+      - if:
+          condition:
+            lambda: |-
+              auto idx = id(${meter_id}_wiring_mode_set).active_index();
+              return idx.has_value() && idx.value() == 1;
+          then:
+            - uart.write:
+                id: mod_bus
+                data: [0x01, 0x10, 0x00, 0x25, 0x00, 0x01, 0x02, 0x00, 0x00, 0xA1, 0x65]
+
+text_sensor:
+  - platform: template
+    name: "${meter_name} Version Model"
+    lambda: |-
+      if (isnan(id(${meter_id}_model_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_model_raw).state;
+      if (raw == 0x0339) return std::string("JSY-MK-339");
+      char out[24];
+      snprintf(out, sizeof(out), "unknown (0x%04X)", raw);
+      return std::string(out);
+    icon: mdi:chip
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Version Hardware"
+    lambda: |-
+      if (isnan(id(${meter_id}_hw_ver_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_hw_ver_raw).state;
+      const uint8_t major = (raw >> 12) & 0x0F;
+      const uint8_t minor = (raw >> 4) & 0xFF;
+      const uint8_t patch = raw & 0x0F;
+      char out[20];
+      snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
+      return std::string(out);
+    icon: mdi:information-outline
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Version Software"
+    lambda: |-
+      if (isnan(id(${meter_id}_sw_ver_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_sw_ver_raw).state;
+      const uint8_t major = (raw >> 12) & 0x0F;
+      const uint8_t minor = (raw >> 4) & 0xFF;
+      const uint8_t patch = raw & 0x0F;
+      char out[20];
+      snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
+      return std::string(out);
+    icon: mdi:information-outline
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Version Protocol"
+    lambda: |-
+      if (isnan(id(${meter_id}_proto_ver_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_proto_ver_raw).state;
+      const uint8_t major = (raw >> 12) & 0x0F;
+      const uint8_t minor = (raw >> 4) & 0xFF;
+      const uint8_t patch = raw & 0x0F;
+      char out[20];
+      snprintf(out, sizeof(out), "V%u.%02u.%u", major, minor, patch);
+      return std::string(out);
+    icon: mdi:information-outline
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Comm RS485 Data Format"
+    lambda: |-
+      if (isnan(id(${meter_id}_rs485_cfg_raw).state)) return std::string("unknown");
+      const uint8_t fmt = ((((uint16_t) id(${meter_id}_rs485_cfg_raw).state) & 0x00FF) >> 4) & 0x03;
+      switch (fmt) {
+        case 0: return std::string("8,N,1");
+        case 1: return std::string("8,E,1");
+        case 2: return std::string("8,O,1");
+        case 3: return std::string("8,N,2");
+        default: return std::string("unknown");
+      }
+    icon: mdi:format-list-bulleted
+    internal: ${metadata_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Direction Active Power"
+    lambda: |-
+      if (isnan(id(${meter_id}_power_direction_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_power_direction_raw).state;
+      if (raw & 0x0008) return std::string("reverse");
+      return std::string("forward");
+    icon: mdi:arrow-left-right
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Direction Reactive Power"
+    lambda: |-
+      if (isnan(id(${meter_id}_power_direction_raw).state)) return std::string("unknown");
+      const uint16_t raw = (uint16_t) id(${meter_id}_power_direction_raw).state;
+      if (raw & 0x0080) return std::string("reverse");
+      return std::string("forward");
+    icon: mdi:arrow-left-right
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    update_interval: 60s
+
+  - platform: template
+    name: "${meter_name} Config Wiring Mode"
+    lambda: |-
+      if (isnan(id(${meter_id}_wiring_mode_raw).state)) return std::string("unknown");
+      const uint16_t mode = (uint16_t) id(${meter_id}_wiring_mode_raw).state;
+      if (mode == 0x0001) return std::string("3-phase 3-wire");
+      return std::string("3-phase 4-wire");
+    icon: mdi:transmission-tower
+    internal: ${config_internal}
+    entity_category: config
+    update_interval: 60s
+
+binary_sensor:
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Reverse Phase Sequence"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0100
+    device_class: problem
+    internal: ${alarms_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Leakage Overcurrent"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0080
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Current A"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0010
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Current B"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0020
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Current C"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0040
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Voltage A"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0001
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Voltage B"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0002
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Alarm Limit Voltage C"
+    register_type: holding
+    address: 0x0133
+    bitmask: 0x0004
+    device_class: problem
+    internal: ${limits_internal}
+    entity_category: diagnostic
+    icon: mdi:alert
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Active A Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0001
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Active B Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0002
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Active C Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0004
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Reactive A Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0010
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Reactive B Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0020
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
+
+  - platform: modbus_controller
+    modbus_controller_id: ${meter_id}_main
+    name: "${meter_name} Direction Reactive C Reverse"
+    register_type: holding
+    address: 0x0132
+    bitmask: 0x0040
+    internal: ${diagnostics_internal}
+    entity_category: diagnostic
+    icon: mdi:swap-horizontal
+    skip_updates: ${skip_updates_60s}
